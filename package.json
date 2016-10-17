@@ -1,0 +1,26 @@
+{
+  "name": "wapi-diffuser",
+  "version": "1.0.0",
+  "description": "a modularized effect to diffuse sound",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/autotel/wapi-diffuser.git"
+  },
+  "author": "autotel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/autotel/wapi-diffuser/issues"
+  },
+  "homepage": "https://github.com/autotel/wapi-diffuser#readme",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.16.0",
+    "babelify": "^7.3.0",
+    "gulp-sourcemaps": "^2.1.1",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
