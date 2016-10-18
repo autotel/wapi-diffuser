@@ -9,42 +9,50 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var filterLowestCut = 80;
+var filterHighestCut = 20000;
+
 var BlurModule = exports.BlurModule = function () {
   function BlurModule(audioContext) {
     _classCallCheck(this, BlurModule);
 
     console.log("blurmodule constructor");
-    var biquadFilter = audioContext.createBiquadFilter();
-    var convolver = audioContext.createConvolver();
+    var thisBlurModule = this;
+
+    this.biquadFilter = audioContext.createBiquadFilter();
+    this.convolver = audioContext.createConvolver();
 
     var inputNode = audioContext.createGain();
     var outputNode = audioContext.createGain();
     this.dryLevel = audioContext.createGain();
     this.wetLevel = audioContext.createGain();
     /*
-    [input node_______________________]
+    [input node _______________________]
+      V
+    [Low pass filte ___________________]
       V                    V
     [dryLevel node]     [wetLevel node]
       |                    V
-      |                 [Low pass filter]
       |                 [convolver]
       V                    V
-    [output node_____________________]
-      */
-    inputNode.connect(this.dryLevel);
-    inputNode.connect(this.wetLevel);
+    [output node _____________________]
+    */
+
+    inputNode.connect(this.biquadFilter);
+
+    this.biquadFilter.connect(this.dryLevel);
+    this.biquadFilter.connect(this.wetLevel);
 
     this.dryLevel.connect(outputNode);
-    this.wetLevel.connect(biquadFilter);
+    this.wetLevel.connect(this.convolver);
 
-    biquadFilter.connect(convolver);
-    convolver.connect(outputNode);
+    this.convolver.connect(outputNode);
 
     this.audioInput = inputNode;
     this.audioOutput = outputNode;
 
-    biquadFilter.type = "lowpass";
-    biquadFilter.frequency.value = 300;
+    this.biquadFilter.type = "lowpass";
+    this.biquadFilter.frequency.value = 300;
 
     //most code of this function comes from http://middleearmedia.com/web-audio-api-convolver-node/
     function getImpulse(impulseUrl) {
@@ -56,9 +64,9 @@ var BlurModule = exports.BlurModule = function () {
         var impulseData = ajaxRequest.response;
         audioContext.decodeAudioData(impulseData, function (buffer) {
           var myImpulseBuffer = buffer;
-          convolver.buffer = myImpulseBuffer;
-          convolver.loop = true;
-          convolver.normalize = true;
+          thisBlurModule.convolver.buffer = myImpulseBuffer;
+          thisBlurModule.convolver.loop = true;
+          thisBlurModule.convolver.normalize = true;
         }, function (e) {
           "Error with decoding audio data" + e.err;
         });
@@ -79,6 +87,9 @@ var BlurModule = exports.BlurModule = function () {
     key: "control",
     value: function control(value) {
       var wet = value;
+      var filterCut = (1 - value * value) * filterHighestCut + filterLowestCut;
+      console.log(filterCut);
+      this.biquadFilter.frequency.value = filterCut;
       this.dryLevel.gain.value = 1 - wet;
       this.wetLevel.gain.value = wet;
     }

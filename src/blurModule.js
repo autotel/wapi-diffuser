@@ -1,39 +1,46 @@
+let filterLowestCut=80;
+let filterHighestCut=20000;
+
 export class BlurModule{
   constructor(audioContext){
     console.log("blurmodule constructor");
-    let biquadFilter = audioContext.createBiquadFilter();
-    let convolver=audioContext.createConvolver();
+    let thisBlurModule=this;
+
+    this.biquadFilter = audioContext.createBiquadFilter();
+    this.convolver=audioContext.createConvolver();
 
     let inputNode=audioContext.createGain();
     let outputNode=audioContext.createGain();
     this.dryLevel=audioContext.createGain();
     this.wetLevel=audioContext.createGain();
     /*
-    [input node_______________________]
+    [input node _______________________]
+      V
+    [Low pass filte ___________________]
       V                    V
     [dryLevel node]     [wetLevel node]
       |                    V
-      |                 [Low pass filter]
       |                 [convolver]
       V                    V
-    [output node_____________________]
-
+    [output node _____________________]
     */
-    inputNode.connect(this.dryLevel);
-    inputNode.connect(this.wetLevel);
+
+    inputNode.connect(this.biquadFilter);
+
+    this.biquadFilter.connect(this.dryLevel);
+    this.biquadFilter.connect(this.wetLevel);
 
     this.dryLevel.connect(outputNode);
-    this.wetLevel.connect(biquadFilter);
+    this.wetLevel.connect(this.convolver);
 
-    biquadFilter.connect(convolver);
-    convolver.connect(outputNode);
+    this.convolver.connect(outputNode);
 
 
     this.audioInput=inputNode;
     this.audioOutput=outputNode;
 
-    biquadFilter.type = "lowpass";
-    biquadFilter.frequency.value = 300;
+    this.biquadFilter.type = "lowpass";
+    this.biquadFilter.frequency.value = 300;
 
     //most code of this function comes from http://middleearmedia.com/web-audio-api-convolver-node/
     function getImpulse(impulseUrl) {
@@ -45,9 +52,9 @@ export class BlurModule{
         let impulseData = ajaxRequest.response;
         audioContext.decodeAudioData(impulseData, function(buffer) {
           let myImpulseBuffer = buffer;
-          convolver.buffer = myImpulseBuffer;
-          convolver.loop = true;
-          convolver.normalize = true;
+          thisBlurModule.convolver.buffer = myImpulseBuffer;
+          thisBlurModule.convolver.loop = true;
+          thisBlurModule.convolver.normalize = true;
         },
         function(e){"Error with decoding audio data" + e.err});
 
@@ -63,6 +70,9 @@ export class BlurModule{
   }
   control(value){
     let wet=value;
+    let filterCut=(1-value*value)*filterHighestCut+filterLowestCut;
+    console.log(filterCut);
+    this.biquadFilter.frequency.value=filterCut;
     this.dryLevel.gain.value=1-wet;
     this.wetLevel.gain.value=wet;
   };
