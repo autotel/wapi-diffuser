@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded',function(){
 
   looperModule.connect(module.audioInput);
 
-
   module.connect(output);
   let duck=document.createElement("img");
   duck.src="assets/duck.png"
